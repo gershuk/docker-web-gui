@@ -26,27 +26,31 @@ class NavBar extends React.PureComponent {
 
   render () {
     const { active } = this.state
-    return <Pane display="flex" justifyContent="center" padding={26} background="#f9f9fc">
+    return <Pane display="flex" justifyContent="center" padding={2} background="#f9f9fc" margin={2}>
       <Button 
-        height={48} 
-        width={250} 
+        height={36} 
+        width={188} 
         justifyContent='center' 
         alignItems='center'
-        fontSize={14} 
+        fontSize={10} 
+        paddingLeft={2}
+        paddingRight={2}
         borderTopRightRadius={0} 
         appearance={active === 'containers' ? 'primary' : 'default'}
         borderBottomRightRadius={0}
         is={Link}
         to='/'
         onClick={() => this.setState({active: 'containers'})}>
-          <Icon icon="layers" marginRight={5} size={14} /> Container
+          <Icon icon="layers" marginRight={2} size={10} /> Container
         </Button>
       <Button 
-        height={48} 
-        width={250} 
+        height={36} 
+        width={188} 
         justifyContent='center' 
         alignItems='center'
-        fontSize={14} 
+        fontSize={10} 
+        paddingLeft={2}
+        paddingRight={2}
         borderTopLeftRadius={0} 
         borderBottomLeftRadius={0} 
         borderTopRightRadius={0} 
@@ -55,14 +59,16 @@ class NavBar extends React.PureComponent {
         is={Link}
         to='/images'
         onClick={() => this.setState({active: 'images'})}>
-          <Icon icon="projects" marginRight={5} size={14} /> Image
+          <Icon icon="projects" marginRight={2} size={10} /> Image
         </Button>
       <Button 
-        height={48} 
-        width={250} 
+        height={36} 
+        width={188} 
         justifyContent='center' 
         alignItems='center'
-        fontSize={14} 
+        fontSize={10} 
+        paddingLeft={2}
+        paddingRight={2}
         borderTopLeftRadius={0} 
         appearance="default"
         borderBottomLeftRadius={0} 
@@ -70,7 +76,7 @@ class NavBar extends React.PureComponent {
         is={Link}
         to='/cleanup'
         onClick={() => this.setState({active: 'cleanup'})}>
-          <Icon icon="shield" marginRight={5} size={14} /> Clean-up
+          <Icon icon="shield" marginRight={2} size={10} /> Clean-up
         </Button>
     </Pane>
   }

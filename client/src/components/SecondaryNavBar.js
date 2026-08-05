@@ -83,7 +83,8 @@ class SecondaryNavBar extends React.PureComponent {
       backgroundColor="#f1f1f1" 
       display="flex" 
       justifyContent="center"
-      padding={10}>
+      padding={2}
+      margin={2}>
         {this.groupsToggler()}
         {this.renderBody()}
       </Pane>
