@@ -74,6 +74,7 @@ class ContainerCard extends React.PureComponent {
             display="flex" 
             flexDirection="column" 
             flexGrow={1}
+            flexShrink={0}
             padding={2}
             borderRadius={6}
             border="default"

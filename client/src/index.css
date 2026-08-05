@@ -28,7 +28,7 @@ code {
 div.subnavaware-view {
   flex: 1 1 0;
   min-height: 0;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
   overflow-y: scroll !important;
   /* background: #e2e2e2; */
 }

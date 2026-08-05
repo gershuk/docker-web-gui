@@ -19,7 +19,6 @@ class ContainersList extends React.PureComponent {
       display="flex" 
       flexDirection="column" 
       justifyContent="center" 
-      alignItems="center"
       marginTop={2}>
       
         {

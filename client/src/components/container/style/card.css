@@ -1,8 +1,11 @@
 .element-card {
   width: 100% !important;
+  min-width: max-content !important;
   max-width: 755px !important;
   border-color: transparent !important;
   margin-bottom: 2px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 .card-active {
