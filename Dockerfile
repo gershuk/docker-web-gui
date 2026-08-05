@@ -13,12 +13,12 @@ RUN apk add --no-cache python3 py3-pip build-base
 
 # Сначала копируем только манифесты зависимостей,
 # чтобы слой с npm ci кэшировался независимо от кода
-COPY backend/package.json backend/package-lock.json ./
+COPY backend/package.json ./
 
-# Устанавливаем только production-зависимости детерминированно (npm ci)
-# Кэш npm переживает пересборки через BuildKit
+# Устанавливаем только production-зависимости.
+# lock-файл не хранится в git, поэтому npm install вместо npm ci.
 RUN --mount=type=cache,target=/root/.npm \
-    NODE_ENV=production npm ci
+    NODE_ENV=production npm install --no-audit --no-fund
 
 # ============================================================
 # Stage 2: client-builder — сборка React-фронтенда
@@ -27,8 +27,9 @@ FROM node:18-alpine AS client-builder
 
 WORKDIR /src/client
 
-# Копируем манифесты зависимостей клиента
-COPY client/package.json client/package-lock.json ./
+# Копируем манифест зависимостей клиента
+# (lock-файл не хранится в git, см. client/.gitignore)
+COPY client/package.json ./
 
 # Устанавливаем зависимости клиента (нужны и dev-зависимости, т.к. react-scripts в них).
 # Используем npm install вместо npm ci: lock-файл клиента не синхронизирован с package.json,
