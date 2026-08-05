@@ -1,4 +1,25 @@
+# Зависимости
 **/node_modules
 **/data.db
+
+# VCS и IDE
+.git
+.gitignore
 .idea
+.vscode
 .DS_Store
+
+# Локальные файлы разработки
+*.log
+.env
+.env.local
+
+# Фронтенд-исходники (в образ попадает уже собранный backend/web)
+# Раскомментируйте, если фронтенд собирается в CI отдельно
+# client/
+# client/node_modules
+
+# Артефакты сборки
+docker-compose.yml
+Makefile
+README.md
