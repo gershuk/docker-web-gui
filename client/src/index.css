@@ -5,6 +5,19 @@ body {
     sans-serif !important;
   -webkit-font-smoothing: antialiased !important;
   -moz-osx-font-smoothing: grayscale !important;
+
+  /* Раскладка: колонка на всю высоту экрана,
+     чтобы контейнер со списком растягивался до низа без белой полосы */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 code {
@@ -13,7 +26,8 @@ code {
 }
 
 div.subnavaware-view {
-  height: calc(100vh - 148px) !important;
+  flex: 1 1 0;
+  min-height: 0;
   overflow-x: hidden !important;
   overflow-y: scroll !important;
   /* background: #e2e2e2; */
