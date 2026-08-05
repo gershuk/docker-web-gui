@@ -32,3 +32,11 @@ div.subnavaware-view {
   overflow-y: scroll !important;
   /* background: #e2e2e2; */
 }
+
+/* Увеличение интерфейса в 1.5 раза на десктопе (ширина >= 1024px).
+   Мобильные экраны (< 1024px) остаются без изменений. */
+@media (min-width: 1024px) {
+  #root {
+    zoom: 1.5;
+  }
+}
