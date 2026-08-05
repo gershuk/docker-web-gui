@@ -26,8 +26,7 @@ class ImageList extends React.PureComponent {
       display="flex" 
       flexDirection="column" 
       justifyContent="center" 
-      alignItems="center"
-      marginTop={20}>
+      marginTop={2}>
       
       { showModal && <Modal image={selectedImage} toggleModal={toggleImageDeleteModal} />} 
         {

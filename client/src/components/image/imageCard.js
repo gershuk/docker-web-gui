@@ -16,7 +16,8 @@ class ImageCard extends React.PureComponent {
             display="flex" 
             flexDirection="column" 
             flexGrow={1}
-            padding={12}
+            flexShrink={0}
+            padding={2}
             borderRadius={6}
             border="default"
             className={active ? "element-card card-active" : "element-card"}
@@ -32,7 +33,7 @@ class ImageCard extends React.PureComponent {
                <Badge backgroundColor="#deebf7" fontWeight="bold" borderRadius={16} paddingLeft={10} fontSize={11} paddingRight={10} marginLeft={10} marginTop={3}>{image.CreatedSince}</Badge>
             </Pane>
             { active && 
-               <Pane display="flex" marginTop={12}>
+               <Pane display="flex" marginTop={2}>
                   <Button marginRight={5} 
                         height={22} 
                         iconBefore="application"
