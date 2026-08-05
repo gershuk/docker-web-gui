@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1.4
 
 # ============================================================
-# Stage 1: builder — установка production-зависимостей
+# Stage 1: backend-builder — установка production-зависимостей
 # Системные компиляторы нужны только здесь (для sqlite3)
 # ============================================================
-FROM node:18-alpine AS builder
+FROM node:18-alpine AS backend-builder
 
 WORKDIR /src/backend
 
@@ -21,7 +21,32 @@ RUN --mount=type=cache,target=/root/.npm \
     NODE_ENV=production npm ci
 
 # ============================================================
-# Stage 2: runtime — минимальный образ без компиляторов
+# Stage 2: client-builder — сборка React-фронтенда
+# ============================================================
+FROM node:18-alpine AS client-builder
+
+WORKDIR /src/client
+
+# Копируем манифесты зависимостей клиента
+COPY client/package.json client/package-lock.json ./
+
+# Устанавливаем зависимости клиента (нужны и dev-зависимости, т.к. react-scripts в них).
+# Используем npm install вместо npm ci: lock-файл клиента не синхронизирован с package.json,
+# поэтому npm ci падает с EUSAGE. --legacy-peer-deps нужен из-за старых peer-зависимостей
+# react-scripts 3.1.1 (строгие peer-правила современного npm их не переваривают).
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --no-audit --no-fund --legacy-peer-deps
+
+# Копируем исходники клиента (package.json уже на месте, поэтому копируем поверх)
+COPY ./client ./
+
+# Собираем production-сборку.
+# NODE_OPTIONS=--openssl-legacy-provider нужен из-за старого webpack (react-scripts 3.1.1),
+# который не поддерживает новые алгоритмы хэширования OpenSSL в node 18+.
+RUN NODE_OPTIONS=--openssl-legacy-provider npm run build
+
+# ============================================================
+# Stage 3: runtime — минимальный образ без компиляторов
 # ============================================================
 FROM node:18-alpine
 
@@ -30,11 +55,17 @@ WORKDIR /src
 # В рантайме нужен только docker CLI для управления Docker
 RUN apk add --no-cache docker-cli
 
-# Копируем уже установленные production-зависимости из builder
-COPY --from=builder /src/backend/node_modules ./backend/node_modules
+# Копируем уже установленные production-зависимости из backend-builder
+COPY --from=backend-builder /src/backend/node_modules ./backend/node_modules
 
-# Копируем исходники приложения
+# Копируем исходники бэкенда
 COPY ./backend ./backend
+
+# Копируем собранный фронтенд из client-builder поверх backend/web,
+# чтобы сервер отдавал актуальную сборку клиента
+COPY --from=client-builder /src/client/build ./backend/web
+
+# Копируем точку входа
 COPY ./app.js ./app.js
 
 EXPOSE 3230
