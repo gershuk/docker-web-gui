@@ -4,7 +4,7 @@ import SecondaryNavBar from '../components/SecondaryNavBar'
 import ContainerLists from '../components/container/lists'
 import GroupsList from '../components/groups/GroupsList'
 
-import {containerStatsProcess} from '../store/actions/stats.action'
+import {containerStatsProcess, stopContainerStats} from '../store/actions/stats.action'
 
 import {store} from '../store'
 
@@ -18,6 +18,10 @@ class ContainerPage extends React.PureComponent {
 
   componentDidMount () {
     store.dispatch(containerStatsProcess())
+  }
+
+  componentWillUnmount () {
+    store.dispatch(stopContainerStats())
   }
 
   render () {

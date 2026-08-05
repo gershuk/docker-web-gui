@@ -56,6 +56,10 @@ exports.safeTerminal = {
     return Terminal(`docker ${pruneType} prune -f`);
   },
   containerLs: () => Terminal(`docker container ls --format '{{json .}}'`),
+  allContainersWithDetails: () =>
+    Terminal(
+      `docker ps -a --format '{"ID":"{{.ID}}","Names":"{{.Names}}","State":"{{.State}}","Status":"{{.Status}}","CreatedAt":"{{.CreatedAt}}"}'`
+    ),
   formattedImages: () =>
     Terminal(
       `docker images --format '{"ID": "{{.ID}}", "Tag": "{{.Tag}}", "CreatedSince": "{{.CreatedSince}}", "Size": "{{.Size}}", "VirtualSize": "{{.VirtualSize}}", "Repository": "{{.Repository}}"}'`
