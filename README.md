@@ -29,8 +29,6 @@ Here is what adjusted:
 - Removed pre-built frontend artifacts from the repository — the client is now built during the Docker image build stage.
 - Added a multi-stage Dockerfile and a GitHub Actions workflow that builds and publishes the image on push to `main`.
 
-Everyone is welcome here. Whether you are here to use the tool, report a small issue, propose an idea, or open a pull request — you are valued. Please be kind and respectful to all participants, just as we try to be to you.
-
 ## Start the app
 
 Before you follow below steps to start the app, make sure you have `node` and `npm` installed in your system.
