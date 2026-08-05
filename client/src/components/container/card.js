@@ -18,7 +18,7 @@ class ContainerCard extends React.PureComponent {
     const { container, showNewGroupForm, toggleDeleteModal, getLog } = this.props
     if(!showNewGroupForm) {
       if(active) {
-        return <Pane display="flex" marginTop={12} marginLeft={46}>
+        return <Pane display="flex" marginTop={2} marginLeft={46}>
           <ContainerRestart container={container} />
           <Button marginRight={5} 
             height={22} 
@@ -74,7 +74,7 @@ class ContainerCard extends React.PureComponent {
             display="flex" 
             flexDirection="column" 
             flexGrow={1}
-            padding={12}
+            padding={2}
             borderRadius={6}
             border="default"
             className={cardName}

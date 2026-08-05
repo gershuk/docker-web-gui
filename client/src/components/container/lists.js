@@ -20,7 +20,7 @@ class ContainersList extends React.PureComponent {
       flexDirection="column" 
       justifyContent="center" 
       alignItems="center"
-      marginTop={20}>
+      marginTop={2}>
       
         {
           containers.map((container, index) => 
