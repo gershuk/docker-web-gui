@@ -1,2 +1,5 @@
 .DS_Store
 .idea
+
+# Артефакты сборки фронтенда (генерируется из client/ при npm run build / docker build)
+backend/web/
