@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   docker-web-gui:
     container_name: docker-web-gui
@@ -7,6 +5,12 @@ services:
       context: .
     ports:
       - "3230:3230"
+    environment:
+      # Values come from the project-root .env file (docker-compose reads it
+      # automatically). Override inline with e.g. `AUTH_PASSWORD=... docker compose up -d`.
+      - AUTH_USERNAME=${AUTH_USERNAME:-admin}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-admin}
+      - SESSION_TTL_DAYS=${SESSION_TTL_DAYS:-180}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always  # This ensures the container auto-starts and restarts on failure

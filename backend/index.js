@@ -4,6 +4,11 @@ const path = require("path");
 const session = require("express-session");
 const port = 3230;
 
+// Load environment variables from the project-root .env file (if present)
+// before anything else reads process.env. Values already set in the
+// environment (e.g. by docker-compose) take precedence.
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+
 const db = require("./utilities/db");
 const KnexSessionStore = require("./utilities/sessionStore");
 const AuthController = require("./controllers/AuthController");

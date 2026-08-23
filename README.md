@@ -36,6 +36,7 @@ This fork adds a built-in authentication page (added by gershuk). Here is how it
 
 - **No registration** — the service provisions a single admin account automatically on the first start.
 - **Credentials** are taken from the `AUTH_USERNAME` and `AUTH_PASSWORD` environment variables (defaults: `admin` / `admin` — change them before the first start!). The password is never stored in plain text: it is saved as a **bcrypt hash** in the local SQLite database (`data.db`).
+- **Where to set them** — create a `.env` file in the project root (copy `.env.example`). With `docker compose` the file is read automatically; when running `node app.js` directly, the backend loads it via `dotenv`. The account is seeded with these credentials only on the **first** start — changing them later requires deleting `data.db` (or, for Docker, recreating the container).
 - **Persistent login** — after a successful login the browser receives a signed session cookie (`HttpOnly`, `SameSite=Lax`). The session lives for **6 months of activity** (a sliding timeout; configure with the `SESSION_TTL_DAYS` environment variable), so when you revisit the page from the same browser you are already logged in — no need to re-authenticate.
 - **Survives restarts** — sessions are stored server-side in the SQLite database, so a page reload or even a server restart does not log you out.
 - **Multiple devices** — logging in from another browser or device creates an independent session and does not log out the other devices.
