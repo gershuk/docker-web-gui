@@ -26,7 +26,7 @@ class Routes extends React.PureComponent {
     // Waiting for the server to confirm whether we have a valid session.
     if (status === 'checking') {
       return (
-        <Pane display="flex" alignItems="center" justifyContent="center" minHeight="100vh">
+        <Pane display="flex" alignItems="center" justifyContent="center" minHeight="calc(100vh / var(--ui-scale))">
           <Spinner size={32} />
         </Pane>
       )

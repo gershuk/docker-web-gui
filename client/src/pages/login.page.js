@@ -33,7 +33,7 @@ class LoginPage extends React.PureComponent {
         alignItems="center"
         justifyContent="center"
         flex="1"
-        minHeight="100vh"
+        minHeight="calc(100vh / var(--ui-scale))"
         background="#f1f1f1"
       >
         <Pane
