@@ -98,11 +98,30 @@ Before you follow below steps to start the app, make sure you have `node` and `n
   ```
   cd ./docker-web-gui
   ```
+- Install and build the client — the backend serves the compiled UI from `backend/web`, which is not stored in the repository:
+  ```
+  cd client
+  npm install
+  npm run build:serve
+  cd ..
+  ```
 - Run `app.js`, it will automatically install all the [node modules](https://github.com/gershuk/docker-web-gui/blob/main/backend/package.json) for you if not installed already.
   ```
   node app.js
   ```
 - Now visit http://localhost:3230/
+
+### Development mode (frontend with hot reload on :3000)
+
+- Terminal 1 — run the backend:
+  ```
+  node app.js
+  ```
+- Terminal 2 — run the Create React App dev server:
+  ```
+  cd client && npm install && npm start
+  ```
+  Open http://localhost:3000. The dev server proxies `/api` requests to the backend at http://localhost:3230 (see the `proxy` field in `client/package.json`), so login and all API calls work out of the box.
 
 ## Using Docker
 

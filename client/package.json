@@ -18,9 +18,11 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:serve": "react-scripts build && rm -rf ../backend/web && cp -r build ../backend/web",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://localhost:3230",
   "eslintConfig": {
     "extends": "react-app"
   },
