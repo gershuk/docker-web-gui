@@ -10,6 +10,12 @@ const port = 3230;
 // environment (e.g. by docker-compose) take precedence.
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
+// Never let an unhandled promise rejection (e.g. a failed docker command in a
+// route handler without try/catch) crash the whole process.
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled rejection:", err);
+});
+
 const db = require("./utilities/db");
 const KnexSessionStore = require("./utilities/sessionStore");
 const AuthController = require("./controllers/AuthController");

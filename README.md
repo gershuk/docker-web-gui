@@ -44,6 +44,7 @@ This fork adds a built-in authentication page (added by gershuk). Here is how it
 - **Brute-force protection** — login attempts are rate-limited (10 attempts per 15 minutes per IP).
 - **CSRF protection** — the session cookie uses `SameSite=Lax`, and all state-changing requests must carry a custom `X-Requested-With` header (the client sends it automatically).
 - **Docker** — the SQLite database (`data.db`) is stored in a Docker **named volume** (`docker-web-gui-data`), so the account and sessions survive container recreation. Sessions are revoked automatically when the password in the environment changes (see above).
+- **Non-root** — the container runs as the unprivileged `node` user. On start, the entrypoint fixes the ownership of the data volume and detects the group that owns the mounted `/var/run/docker.sock` automatically, so Docker management keeps working on any host (no configuration needed).
 
 ## Running behind a reverse proxy (nginx)
 
