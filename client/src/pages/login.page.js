@@ -62,6 +62,7 @@ class LoginPage extends React.PureComponent {
               marginBottom={16}
               value={username}
               onChange={e => this.setState({ username: e.target.value })}
+              autoComplete="username"
               autoFocus
             />
             <Text size={300} color="muted" marginBottom={4} display="block">
@@ -74,6 +75,7 @@ class LoginPage extends React.PureComponent {
               marginBottom={20}
               value={password}
               onChange={e => this.setState({ password: e.target.value })}
+              autoComplete="current-password"
             />
             <Button
               type="submit"
