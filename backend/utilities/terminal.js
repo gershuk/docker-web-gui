@@ -68,7 +68,7 @@ exports.safeTerminal = {
     ),
   formattedImages: () =>
     Terminal(
-      `docker images --format '{"ID": "{{.ID}}", "Tag": "{{.Tag}}", "CreatedSince": "{{.CreatedSince}}", "Size": "{{.Size}}", "VirtualSize": "{{.VirtualSize}}", "Repository": "{{.Repository}}"}'`
+      `docker images --format '{"ID": "{{.ID}}", "Tag": "{{.Tag}}", "CreatedSince": "{{.CreatedSince}}", "Size": "{{.Size}}", "Repository": "{{.Repository}}"}'`
     ),
   singleImage: (task, id) => {
     if (!isValidString(task)) {

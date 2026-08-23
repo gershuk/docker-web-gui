@@ -32,19 +32,16 @@ WORKDIR /src/client
 COPY client/package.json ./
 
 # Устанавливаем зависимости клиента (нужны и dev-зависимости, т.к. react-scripts в них).
-# Используем npm install вместо npm ci: lock-файл клиента не синхронизирован с package.json,
-# поэтому npm ci падает с EUSAGE. --legacy-peer-deps нужен из-за старых peer-зависимостей
-# react-scripts 3.1.1 (строгие peer-правила современного npm их не переваривают).
+# Без --legacy-peer-deps: с react-scripts 5 / webpack 5 npm должен разрешить
+# peer-зависимости (ajv и т.д.), иначе сборка падает.
 RUN --mount=type=cache,target=/root/.npm \
-    npm install --no-audit --no-fund --legacy-peer-deps
+    npm install --no-audit --no-fund
 
 # Копируем исходники клиента (package.json уже на месте, поэтому копируем поверх)
 COPY ./client ./
 
-# Собираем production-сборку.
-# NODE_OPTIONS=--openssl-legacy-provider нужен из-за старого webpack (react-scripts 3.1.1),
-# который не поддерживает новые алгоритмы хэширования OpenSSL в node 18+.
-RUN NODE_OPTIONS=--openssl-legacy-provider npm run build
+# Собираем production-сборку (react-scripts 5 / webpack 5 работает на node 22 без флагов).
+RUN npm run build
 
 # ============================================================
 # Stage 3: runtime — минимальный образ без компиляторов
