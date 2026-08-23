@@ -45,6 +45,46 @@ This fork adds a built-in authentication page (added by gershuk). Here is how it
 - **CSRF protection** — the session cookie uses `SameSite=Lax`, and all state-changing requests must carry a custom `X-Requested-With` header (the client sends it automatically).
 - **Docker** — the SQLite database (`data.db`) is stored in a Docker **named volume** (`docker-web-gui-data`), so the account and sessions survive container recreation. Sessions are revoked automatically when the password in the environment changes (see above).
 
+## Running behind a reverse proxy (nginx)
+
+The service works behind nginx with TLS. Set these environment variables in `.env` (or pass them to the container):
+
+- `TRUST_PROXY=1` — number of trusted proxy hops (usually `1`). Without it the login rate-limit sees every client as the proxy IP, and the session cookie never gets the `Secure` flag.
+- `COOKIE_SECURE=auto` — `true` forces the `Secure` attribute (HTTPS only), `false` disables it, `auto` (default) sets it when the request arrived over HTTPS.
+- `CORS_ORIGIN=...` — optional comma-separated list of extra origins allowed to call the API (only needed for local development, e.g. the Create React App dev server on `http://localhost:3000`). Same-origin requests are always allowed.
+
+Example nginx site config:
+
+```nginx
+server {
+  listen 443 ssl http2;
+  server_name docker.example.com;
+
+  ssl_certificate     /etc/letsencrypt/live/docker.example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/docker.example.com/privkey.pem;
+
+  # Required for TRUST_PROXY=1 to work (real client IP and https detection).
+  proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+
+  # Transport security.
+  add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+  # Extra brute-force protection for the login endpoint.
+  limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+  location = /api/auth/login {
+    limit_req zone=login burst=5 nodelay;
+    proxy_pass http://127.0.0.1:3230;
+  }
+
+  location / {
+    proxy_pass http://127.0.0.1:3230;
+  }
+}
+```
+
+The app itself also sends basic security headers via `helmet` (nosniff, frame options, referrer policy, HSTS). Note that HTTPS only protects the transport: the service still has full control over the Docker daemon through the mounted socket, so keep it on a private network and use a strong password.
+
 ## Start the app
 
 Before you follow below steps to start the app, make sure you have `node` and `npm` installed in your system.

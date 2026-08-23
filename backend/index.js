@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const path = require("path");
 const session = require("express-session");
 const port = 3230;
@@ -16,6 +17,36 @@ const AuthController = require("./controllers/AuthController");
 // Sliding session lifetime, default 180 days (6 months).
 const SESSION_TTL_DAYS = parseInt(process.env.SESSION_TTL_DAYS || "180", 10);
 
+// Number of trusted reverse-proxy hops (usually 1 when behind nginx). Makes
+// req.ip and req.secure reflect the real client via X-Forwarded-For and
+// X-Forwarded-Proto, so the login rate-limit works per client and the session
+// cookie can get the Secure flag.
+const TRUST_PROXY = process.env.TRUST_PROXY;
+
+// Session cookie Secure attribute: "true" forces it (HTTPS only), "false"
+// disables it, default "auto" — set only when the request arrived over HTTPS.
+const COOKIE_SECURE =
+  process.env.COOKIE_SECURE === "true"
+    ? true
+    : process.env.COOKIE_SECURE === "false"
+    ? false
+    : "auto";
+
+// Explicitly allowed cross-origin hosts (comma separated). Same-origin
+// requests are always allowed. Useful only for local development (e.g. the
+// Create React App dev server on :3000).
+const CORS_ORIGIN = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
+  : [];
+
+function parseTrustProxy(value) {
+  if (!value) return undefined;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  const num = parseInt(value, 10);
+  return Number.isNaN(num) ? value : num;
+}
+
 async function bootstrap() {
   // Boot the database (tables for users/sessions/groups/settings) before
   // creating any middleware that depends on it.
@@ -27,8 +58,32 @@ async function bootstrap() {
 
   const app = express();
 
+  const trustProxy = parseTrustProxy(TRUST_PROXY);
+  if (trustProxy !== undefined) {
+    app.set("trust proxy", trustProxy);
+  }
+
+  // Basic security headers. CSP and COEP are left disabled so the legacy
+  // Create React App bundle keeps working; the CSP can be enforced in nginx.
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false
+    })
+  );
+
   app.use(express.json());
-  app.use(cors({ credentials: true }));
+
+  // CORS: same-origin requests are always allowed; cross-origin only from the
+  // explicitly configured origins (CORS_ORIGIN). Everything else gets no CORS
+  // headers, so browsers block it.
+  app.use((req, res, next) => {
+    const sameOrigin = `${req.protocol}://${req.get("host")}`;
+    cors({
+      credentials: true,
+      origin: [sameOrigin, ...CORS_ORIGIN]
+    })(req, res, next);
+  });
 
   // Server-side sessions stored in SQLite. The browser only receives a signed
   // session id cookie (HttpOnly, SameSite=Lax, 6-month sliding expiry).
@@ -43,7 +98,7 @@ async function bootstrap() {
       cookie: {
         path: "/",
         httpOnly: true,
-        secure: "auto",
+        secure: COOKIE_SECURE,
         sameSite: "lax",
         maxAge: SESSION_TTL_DAYS * 24 * 60 * 60 * 1000
       }
