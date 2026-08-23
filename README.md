@@ -28,6 +28,63 @@ Here is what adjusted:
 - Fixed the units shown for container RAM and network usage.
 - Removed pre-built frontend artifacts from the repository — the client is now built during the Docker image build stage.
 - Added a multi-stage Dockerfile and a GitHub Actions workflow that builds and publishes the image on push to `main`.
+- Added a built-in login page with persistent sessions (added by gershuk) — see [Authentication](#authentication).
+
+## Authentication
+
+This fork adds a built-in authentication page (added by gershuk). Here is how it works:
+
+- **No registration** — the service provisions a single admin account automatically on the first start.
+- **Credentials** are taken from the `AUTH_USERNAME` and `AUTH_PASSWORD` environment variables (defaults: `admin` / `admin` — change them before the first start!). The password is never stored in plain text: it is saved as a **bcrypt hash** in the local SQLite database (`data.db`).
+- **Where to set them** — create a `.env` file in the project root (copy `.env.example`). With `docker compose` the file is read automatically; when running `node app.js` directly, the backend loads it via `dotenv`. The password is stored as a bcrypt hash in `data.db`. On every start the backend compares the environment password with the stored hash: if it **changed**, the new password is applied and **all sessions are revoked** (every device must log in again); if it's the **same**, existing sessions are kept.
+- **Persistent login** — after a successful login the browser receives a signed session cookie (`HttpOnly`, `SameSite=Lax`). The session lives for **6 months of activity** (a sliding timeout; configure with the `SESSION_TTL_DAYS` environment variable), so when you revisit the page from the same browser you are already logged in — no need to re-authenticate.
+- **Survives restarts** — sessions are stored server-side in the SQLite database, so a page reload or even a server restart does not log you out.
+- **Multiple devices** — logging in from another browser or device creates an independent session and does not log out the other devices.
+- **Logout** — use the button in the navigation bar. It immediately revokes the session on the server and clears the cookie.
+- **Brute-force protection** — login attempts are rate-limited (10 attempts per 15 minutes per IP).
+- **CSRF protection** — the session cookie uses `SameSite=Lax`, and all state-changing requests must carry a custom `X-Requested-With` header (the client sends it automatically).
+- **Docker** — the SQLite database (`data.db`) is stored in a Docker **named volume** (`docker-web-gui-data`), so the account and sessions survive container recreation. Sessions are revoked automatically when the password in the environment changes (see above).
+- **Non-root** — the container runs as the unprivileged `node` user. On start, the entrypoint fixes the ownership of the data volume and detects the group that owns the mounted `/var/run/docker.sock` automatically, so Docker management keeps working on any host (no configuration needed).
+
+## Running behind a reverse proxy (nginx)
+
+The service works behind nginx with TLS. Set these environment variables in `.env` (or pass them to the container):
+
+- `TRUST_PROXY=1` — number of trusted proxy hops (usually `1`). Without it the login rate-limit sees every client as the proxy IP, and the session cookie never gets the `Secure` flag.
+- `COOKIE_SECURE=auto` — `true` forces the `Secure` attribute (HTTPS only), `false` disables it, `auto` (default) sets it when the request arrived over HTTPS.
+- `CORS_ORIGIN=...` — optional comma-separated list of extra origins allowed to call the API (only needed for local development, e.g. the Create React App dev server on `http://localhost:3000`). Same-origin requests are always allowed.
+
+Example nginx site config:
+
+```nginx
+server {
+  listen 443 ssl http2;
+  server_name docker.example.com;
+
+  ssl_certificate     /etc/letsencrypt/live/docker.example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/docker.example.com/privkey.pem;
+
+  # Required for TRUST_PROXY=1 to work (real client IP and https detection).
+  proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+
+  # Transport security.
+  add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+  # Extra brute-force protection for the login endpoint.
+  limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+  location = /api/auth/login {
+    limit_req zone=login burst=5 nodelay;
+    proxy_pass http://127.0.0.1:3230;
+  }
+
+  location / {
+    proxy_pass http://127.0.0.1:3230;
+  }
+}
+```
+
+The app itself also sends basic security headers via `helmet` (nosniff, frame options, referrer policy, HSTS). Note that HTTPS only protects the transport: the service still has full control over the Docker daemon through the mounted socket, so keep it on a private network and use a strong password.
 
 ## Start the app
 
@@ -41,11 +98,30 @@ Before you follow below steps to start the app, make sure you have `node` and `n
   ```
   cd ./docker-web-gui
   ```
+- Install and build the client — the backend serves the compiled UI from `backend/web`, which is not stored in the repository:
+  ```
+  cd client
+  npm install
+  npm run build:serve
+  cd ..
+  ```
 - Run `app.js`, it will automatically install all the [node modules](https://github.com/gershuk/docker-web-gui/blob/main/backend/package.json) for you if not installed already.
   ```
   node app.js
   ```
 - Now visit http://localhost:3230/
+
+### Development mode (frontend with hot reload on :3000)
+
+- Terminal 1 — run the backend:
+  ```
+  node app.js
+  ```
+- Terminal 2 — run the Create React App dev server:
+  ```
+  cd client && npm install && npm start
+  ```
+  Open http://localhost:3000. The dev server proxies `/api` requests to the backend at http://localhost:3230 (see the `proxy` field in `client/package.json`), so login and all API calls work out of the box.
 
 ## Using Docker
 

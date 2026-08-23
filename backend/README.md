@@ -1,3 +1,15 @@
+## Authentication
+
+All `/api/*` endpoints (except `POST /api/auth/login` and `GET /api/auth/me`) require an authenticated session.
+
+- `POST /api/auth/login` — body `{ "username": "...", "password": "..." }`. On success sets a signed `connect.sid` session cookie (HttpOnly, SameSite=Lax, sliding 6-month expiry by default — configure with `SESSION_TTL_DAYS`).
+- `GET /api/auth/me` — returns the current user `{ "user": { "id", "username" } }` or `401`.
+- `POST /api/auth/logout` — destroys the current session and clears the cookie.
+
+State-changing requests (POST / PUT / PATCH / DELETE) must include the `X-Requested-With: XMLHttpRequest` header.
+
+The admin account is seeded on first start from the `AUTH_USERNAME` / `AUTH_PASSWORD` environment variables and stored as a bcrypt hash in the SQLite database (`data.db`). Sessions are stored in the same database, so they survive server restarts and can coexist on multiple devices.
+
 ## Backend API
 
 - Get a list of containers

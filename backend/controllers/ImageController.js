@@ -1,13 +1,17 @@
 const { safeTerminal } = require("../utilities/terminal");
 const { lightImageDetail } = require("../utilities/lightImageDetail");
 
-exports.fetch = async (req, res) => {
-  const images = await safeTerminal.formattedImages();
-  const imagesArray = images
-    .split("\n")
-    .filter((image) => image !== "")
-    .map((image) => JSON.parse(image));
-  res.json(imagesArray);
+exports.fetch = async (req, res, next) => {
+  try {
+    const images = await safeTerminal.formattedImages();
+    const imagesArray = images
+      .split("\n")
+      .filter((image) => image !== "")
+      .map((image) => JSON.parse(image));
+    res.json(imagesArray);
+  } catch (error) {
+    next(error);
+  }
 };
 
 exports.command = async (req, res, next) => {

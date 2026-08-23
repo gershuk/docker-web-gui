@@ -1,5 +1,9 @@
 .DS_Store
 .idea
 
+# Локальные переменные окружения (пароль и пр.)
+.env
+.env.local
+
 # Артефакты сборки фронтенда (генерируется из client/ при npm run build / docker build)
 backend/web/

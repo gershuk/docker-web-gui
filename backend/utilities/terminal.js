@@ -19,8 +19,14 @@ exports.safeTerminal = {
   installModules: async (backendPath) => {
     await Terminal(`cd ${backendPath} && npm install`);
   },
-  serve: async (backendPath) => {
-    await Terminal(`cd ${backendPath} && node index.js`);
+  serve: (backendPath) => {
+    // Run the backend as a child process with inherited stdio, so its logs
+    // (boot messages, warnings, errors) reach the parent's output —
+    // e.g. visible in `docker logs`. Using cwd avoids a shell wrapper.
+    return child_process.spawn("node", ["index.js"], {
+      cwd: backendPath,
+      stdio: "inherit",
+    });
   },
   allContainers: () => Terminal(`docker ps -q -a`),
   inspectContainer: async (id) => {
@@ -62,7 +68,7 @@ exports.safeTerminal = {
     ),
   formattedImages: () =>
     Terminal(
-      `docker images --format '{"ID": "{{.ID}}", "Tag": "{{.Tag}}", "CreatedSince": "{{.CreatedSince}}", "Size": "{{.Size}}", "VirtualSize": "{{.VirtualSize}}", "Repository": "{{.Repository}}"}'`
+      `docker images --format '{"ID": "{{.ID}}", "Tag": "{{.Tag}}", "CreatedSince": "{{.CreatedSince}}", "Size": "{{.Size}}", "Repository": "{{.Repository}}"}'`
     ),
   singleImage: (task, id) => {
     if (!isValidString(task)) {
