@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
-import { Pane, Icon, Text, Button } from 'evergreen-ui'
+import { Pane, Icon, Button } from 'evergreen-ui'
 
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
@@ -20,13 +20,6 @@ class NavBar extends React.PureComponent {
     this.setState({
       active: path.replace('/', '')
     })
-  }
-
-  navButton (name, icon) {
-    return <Text display='flex' alignItems='center'>
-      <Icon size={14} color="muted" icon={ icon } marginRight={5}/> 
-        { name }
-    </Text>
   }
 
   render () {
