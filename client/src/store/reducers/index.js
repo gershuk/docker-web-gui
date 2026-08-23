@@ -5,13 +5,15 @@ import groups from './groups.reducer'
 import container from './container.reducer'
 import image from './image.reducer'
 import cleanup from './cleanUp.reducer'
+import auth from './auth.reducer'
 
 const appReducer = combineReducers({
   stats,
   groups,
   container,
   image,
-  cleanup
+  cleanup,
+  auth
 })
 
 export default (state, action) => {

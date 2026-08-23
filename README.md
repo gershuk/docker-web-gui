@@ -28,6 +28,21 @@ Here is what adjusted:
 - Fixed the units shown for container RAM and network usage.
 - Removed pre-built frontend artifacts from the repository — the client is now built during the Docker image build stage.
 - Added a multi-stage Dockerfile and a GitHub Actions workflow that builds and publishes the image on push to `main`.
+- Added a built-in login page with persistent sessions (added by gershuk) — see [Authentication](#authentication).
+
+## Authentication
+
+This fork adds a built-in authentication page (added by gershuk). Here is how it works:
+
+- **No registration** — the service provisions a single admin account automatically on the first start.
+- **Credentials** are taken from the `AUTH_USERNAME` and `AUTH_PASSWORD` environment variables (defaults: `admin` / `admin` — change them before the first start!). The password is never stored in plain text: it is saved as a **bcrypt hash** in the local SQLite database (`data.db`).
+- **Persistent login** — after a successful login the browser receives a signed session cookie (`HttpOnly`, `SameSite=Lax`). The session lives for **6 months of activity** (a sliding timeout; configure with the `SESSION_TTL_DAYS` environment variable), so when you revisit the page from the same browser you are already logged in — no need to re-authenticate.
+- **Survives restarts** — sessions are stored server-side in the SQLite database, so a page reload or even a server restart does not log you out.
+- **Multiple devices** — logging in from another browser or device creates an independent session and does not log out the other devices.
+- **Logout** — use the button in the navigation bar. It immediately revokes the session on the server and clears the cookie.
+- **Brute-force protection** — login attempts are rate-limited (10 attempts per 15 minutes per IP).
+- **CSRF protection** — the session cookie uses `SameSite=Lax`, and all state-changing requests must carry a custom `X-Requested-With` header (the client sends it automatically).
+- **Docker note** — the SQLite database lives in the container by default, so accounts and sessions are re-created on a fresh container. Mount a volume for the backend `data.db` if you want them to survive container recreation.
 
 ## Start the app
 
