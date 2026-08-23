@@ -62,6 +62,11 @@ COPY --from=backend-builder /src/backend/node_modules ./backend/node_modules
 # Копируем исходники бэкенда
 COPY ./backend ./backend
 
+# Предсоздаём каталог БД с пустым файлом: именованный том в docker-compose
+# монтируется на /src/backend/data, и при первом запуске Docker переносит
+# содержимое образа (этот каталог) в пустой том.
+RUN mkdir -p /src/backend/data && touch /src/backend/data/data.db
+
 # Копируем собранный фронтенд из client-builder поверх backend/web,
 # чтобы сервер отдавал актуальную сборку клиента
 COPY --from=client-builder /src/client/build ./backend/web

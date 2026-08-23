@@ -13,4 +13,9 @@ services:
       - SESSION_TTL_DAYS=${SESSION_TTL_DAYS:-180}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      # Персистентная БД: аккаунт и сессии переживают пересоздание контейнера.
+      - docker-web-gui-data:/src/backend/data
     restart: always  # This ensures the container auto-starts and restarts on failure
+
+volumes:
+  docker-web-gui-data:

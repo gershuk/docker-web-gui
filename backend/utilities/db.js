@@ -7,7 +7,7 @@ const fileExists = require('file-exists')
 
 const db = module.exports
 
-db.dbSource = resolve(__dirname + '/../data.db')
+db.dbSource = resolve(__dirname + '/../data/data.db')
 
 db.knex = knexLibrary({
   client: 'sqlite3',
@@ -52,6 +52,45 @@ const seedDefaultUser = async () => {
   }
 }
 
+// Ensures the single admin account exists and matches the credentials from
+// the environment. Runs on every boot:
+//  - first start: seeds the account (password stored as a bcrypt hash);
+//  - if AUTH_PASSWORD differs from the stored hash: applies the new password
+//    and revokes ALL sessions (every device has to log in again);
+//  - if the password is the same: existing sessions are left untouched.
+const syncAdminUser = async () => {
+  let user = await db.knex('users').where({ username: DEFAULT_ADMIN_USERNAME }).first()
+
+  if (!user) {
+    const existing = await db.knex('users').orderBy('id').first()
+    if (existing) {
+      // The admin account exists under a different username — rename it so the
+      // single-admin invariant is kept and no orphan account is left behind.
+      await db.knex('users')
+        .where({ id: existing.id })
+        .update({ username: DEFAULT_ADMIN_USERNAME, updated_at: db.knex.fn.now() })
+      user = existing
+    } else {
+      return seedDefaultUser()
+    }
+  }
+
+  const passwordMatches = await bcrypt.compare(DEFAULT_ADMIN_PASSWORD, user.password_hash)
+  if (!passwordMatches) {
+    // The environment password changed — apply it and revoke all sessions.
+    const passwordHash = await bcrypt.hash(DEFAULT_ADMIN_PASSWORD, BCRYPT_ROUNDS)
+    await db.knex('users')
+      .where({ id: user.id })
+      .update({ password_hash: passwordHash, updated_at: db.knex.fn.now() })
+    await db.knex('sessions').del()
+    console.warn(
+      '\n🔑  The admin password was changed in the environment.\n' +
+      '    All existing sessions have been revoked; please log in again\n' +
+      '    with the new password.\n'
+    )
+  }
+}
+
 db.boot = () => {
   return fileExists(db.dbSource)
     .then(async exists => {
@@ -81,8 +120,8 @@ db.boot = () => {
         table.string('key').primary()
         table.text('value')
       })
-      // Seed the single admin account on first boot.
-      await seedDefaultUser()
+      // Ensure the single admin account matches the environment credentials.
+      await syncAdminUser()
       // Purge sessions that already expired while the server was stopped.
       await db.knex('sessions').where('expires', '<', new Date()).del()
     })
