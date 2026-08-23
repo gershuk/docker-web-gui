@@ -123,7 +123,7 @@ db.boot = () => {
       // Ensure the single admin account matches the environment credentials.
       await syncAdminUser()
       // Purge sessions that already expired while the server was stopped.
-      await db.knex('sessions').where('expires', '<', new Date()).del()
+      await db.cleanupExpiredSessions()
     })
     .catch(err => {
       console.error('Failed to boot the database:', err)
@@ -153,6 +153,13 @@ db.getOrCreateSessionSecret = async () => {
   const secret = crypto.randomBytes(48).toString('hex')
   await db.setSetting('session_secret', secret)
   return secret
+}
+
+// Deletes sessions whose expiry date has passed. Runs on boot and then
+// periodically (see backend/index.js) so the sessions table does not grow
+// with rows that will never be used again.
+db.cleanupExpiredSessions = () => {
+  return db.knex('sessions').where('expires', '<', new Date()).del()
 }
 
 db.newGroup = ({ name, containers }) => {

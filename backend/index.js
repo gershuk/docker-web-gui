@@ -21,7 +21,11 @@ const KnexSessionStore = require("./utilities/sessionStore");
 const AuthController = require("./controllers/AuthController");
 
 // Sliding session lifetime, default 180 days (6 months).
-const SESSION_TTL_DAYS = parseInt(process.env.SESSION_TTL_DAYS || "180", 10);
+// Falls back to 180 if the env var is missing, not a number, or not positive.
+const SESSION_TTL_DAYS = (() => {
+  const parsed = parseInt(process.env.SESSION_TTL_DAYS || "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 180;
+})();
 
 // Number of trusted reverse-proxy hops (usually 1 when behind nginx). Makes
 // req.ip and req.secure reflect the real client via X-Forwarded-For and
@@ -156,6 +160,16 @@ async function bootstrap() {
   });
 
   app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+  // Periodically purge expired sessions (once an hour) so the sessions table
+  // does not keep growing with rows that will never be used again.
+  const cleanExpiredSessions = () => {
+    db.cleanupExpiredSessions().catch((err) =>
+      console.error("Failed to clean up expired sessions:", err)
+    );
+  };
+  cleanExpiredSessions();
+  setInterval(cleanExpiredSessions, 60 * 60 * 1000);
 }
 
 bootstrap();
